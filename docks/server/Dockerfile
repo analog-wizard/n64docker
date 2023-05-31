@@ -1,0 +1,25 @@
+FROM ubuntu
+
+RUN apt-get update
+RUN apt-get install -y x11vnc xvfb xserver-xorg-video-dummy 
+RUN echo '12' | apt-get install -y xinit
+RUN apt-get install -y mupen64plus-qt
+
+RUN mkdir ~/.vnc
+RUN x11vnc -storepasswd 1234 ~/.vnc/passwd
+EXPOSE 5900
+
+RUN mkdir /games
+COPY ../../games /games
+
+RUN mkdir -p /etc/X11
+COPY ../../config/xorg.conf /etc/X11/xorg.conf
+
+ENV DISPLAY :0
+
+RUN mkdir -p /config/mupen64plus
+COPY ../../config/mupen64plus.cfg /config/mupen64plus/mupen64plus.cfg
+
+CMD startx & sleep 3 && \
+    x11vnc -repeat -forever -usepw -shared & sleep 3 && \
+    /usr/games/mupen64plus --configdir /config/mupen64plus --fullscreen /games/smash.z64

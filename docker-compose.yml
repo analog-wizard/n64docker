@@ -3,18 +3,18 @@ services:
   n64:
     build:
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: docks/server/Dockerfile
     networks:
       - net
     ports:
       - "5900:5900"
-
+#========================================
   proxy1:
     depends_on:
       - n64
     build:
       context: .
-      dockerfile: Dockerfile.client
+      dockerfile: docks/client/Dockerfile
     networks:
       - net
     ports:
@@ -28,7 +28,7 @@ services:
       - n64
     build:
       context: .
-      dockerfile: Dockerfile.client
+      dockerfile: docks/client/Dockerfile
     networks:
       - net
     ports:
@@ -42,7 +42,7 @@ services:
       - n64
     build:
       context: .
-      dockerfile: Dockerfile.client
+      dockerfile: docks/client/Dockerfile
     networks:
       - net
     ports:
@@ -56,7 +56,7 @@ services:
       - n64
     build:
       context: .
-      dockerfile: Dockerfile.client
+      dockerfile: docks/client/Dockerfile
     networks:
       - net
     ports:
@@ -64,13 +64,13 @@ services:
     environment:
       SERVER: n64
       PLAYER_NUM: 4
-
+#========================================
   novnc1:
     depends_on:
       - proxy1
     build:
       context: .
-      dockerfile: Dockerfile.novnc
+      dockerfile: docks/novnc/Dockerfile
     networks:
       - net
     ports:
@@ -84,7 +84,7 @@ services:
       - proxy2
     build:
       context: .
-      dockerfile: Dockerfile.novnc
+      dockerfile: docks/novnc/Dockerfile
     networks:
       - net
     ports:
@@ -98,7 +98,7 @@ services:
       - proxy3
     build:
       context: .
-      dockerfile: Dockerfile.novnc
+      dockerfile: docks/novnc/Dockerfile
     networks:
       - net
     ports:
@@ -112,7 +112,7 @@ services:
       - proxy4
     build:
       context: .
-      dockerfile: Dockerfile.novnc
+      dockerfile: docks/novnc/Dockerfile
     networks:
       - net
     ports:

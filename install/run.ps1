@@ -35,6 +35,9 @@ $vnc_port = 5900
 $novnc_port = 8000
 $curr_pln = 1
 
+#Emulate makefile functionality by allowing the user to execute individual functions such as "build" and "runall"
+#Powershell will not allow for a dash character inside a function name, so all "modes" are the same as in the original
+#Makefile but the dash is removed.
 if ($Args[0]) {
     &($Args[0])
     exit
@@ -56,9 +59,9 @@ function build {
     #build
     mupenconfig
 
-    docker build -t $SERVER_IMAGE_NAME .. -f Dockerfile.server
-    docker build -t $CLIENT_IMAGE_NAME .. -f Dockerfile.client
-    docker build -t $NOVNC_IMAGE_NAME .. -f Dockerfile.novnc
+    docker build -t $SERVER_IMAGE_NAME ../docks/server
+    docker build -t $CLIENT_IMAGE_NAME ../docks/client
+    docker build -t $NOVNC_IMAGE_NAME ../docks/novnc
 }
 #end of initial build phase
 #start of execution phase
