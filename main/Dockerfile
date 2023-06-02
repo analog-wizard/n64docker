@@ -1,6 +1,6 @@
 # One of 2 Composite Docker images from the 3 seperate
 # This image will serve as the emulator, containing the emulator and a minimal xvnc setup
-FROM ubuntu:latest
+FROM nginx:latest
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \ 
@@ -11,7 +11,6 @@ RUN apt-get update && \
         make \
         ruby \
         xvfb \
-        nginx \
         novnc \
         x11vnc \
         fluxbox \
