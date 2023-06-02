@@ -1,6 +1,7 @@
 version: '2'
-#consolidate the 12 images into 2
-#consolidate the 12 containers into 5
+
+# consolidate the 12 images into 2
+# consolidate the 12 containers into 5
 
 services:
   n64:

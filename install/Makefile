@@ -1,70 +1,32 @@
-.PHONY: build run run-client mupen-config client-config stop-client stop rm rm-client
+.PHONY: build run run-client mupen-config client-config stop-client stop rm rm-client .network
 
 BASH := $(shell which bash)
 SHELL := $(BASH)
 CLIENT_PORT := $(shell expr 5900 + $(PLAYER_NUM))
 NOVNCPORT := $(shell expr 8000 + $(PLAYER_NUM))
 
-include .env
-
-.network:
-	docker network create ${NETWORK_NAME}
-	touch .network
-
 mupen-config:
 	ruby util/gentranslation.rb > config/keysym-translation.json
 	ruby util/genmupencfg.rb > config/mupen64plus.cfg
 
 build: mupen-config
-	docker build -t $(SERVER_IMAGE_NAME) .. -f Dockerfile.server
-	docker build -t $(CLIENT_IMAGE_NAME) .. -f Dockerfile.client
-	docker build -t $(NOVNC_IMAGE_NAME) .. -f Dockerfile.novnc
+	docker compose build ..
 
-run-all:
-	$(MAKE) run
-	export PLAYER_NUM=1 && export && $(MAKE) run-proxies
-	export PLAYER_NUM=1 && export && $(MAKE) run-novncs
-
-run: .network
-	docker run -d -p '5900:5900' --net $(NETWORK_NAME) --name $(SERVER_CONTAINER_NAME) $(SERVER_IMAGE_NAME)
-
-run-proxy: .network
-	docker run -d -p $(CLIENT_PORT):$(CLIENT_PORT) --net $(NETWORK_NAME) --privileged -e "SERVER" -e "PLAYER_NUM" --name $(CLIENT_CONTAINER_NAME)-proxy-$(PLAYER_NUM) $(CLIENT_IMAGE_NAME)
-
-run-proxies: .network
-	export PLAYER_NUM=1 && export && $(MAKE) run-proxy
-	export PLAYER_NUM=2 && export && $(MAKE) run-proxy
-	export PLAYER_NUM=3 && export && $(MAKE) run-proxy
-	export PLAYER_NUM=4 && export && $(MAKE) run-proxy
-
-run-novnc: .network
-	docker run -d -p $(NOVNCPORT):$(NOVNCPORT) --net $(NETWORK_NAME) -e "SERVER=$(CLIENT_CONTAINER_NAME)-proxy-$(PLAYER_NUM)" -e "PLAYER_NUM"  --name $(NOVNC_CONTAINER_NAME)-$(PLAYER_NUM) $(NOVNC_IMAGE_NAME)
-
-run-novncs: .network
-	export PLAYER_NUM=1 && export && $(MAKE) run-novnc
-	export PLAYER_NUM=2 && export && $(MAKE) run-novnc
-	export PLAYER_NUM=3 && export && $(MAKE) run-novnc
-	export PLAYER_NUM=4 && export && $(MAKE) run-novnc
-
-run-bash:
-	docker run -it -p 5901:5900 --net $(NETWORK_NAME) --name $(CLIENT_CONTAINER_NAME)-1 --privileged -e "SERVER" -e "PLAYER_NUM" $(CLIENT_IMAGE_NAME) bash
-
-stop-client:
-	docker kill $(CLIENT_CONTAINER_NAME)-1 $(CLIENT_CONTAINER_NAME)-2 $(CLIENT_CONTAINER_NAME)-3 $(CLIENT_CONTAINER_NAME)-4
-	docker rm $(CLIENT_CONTAINER_NAME)-1 $(CLIENT_CONTAINER_NAME)-2 $(CLIENT_CONTAINER_NAME)-3 $(CLIENT_CONTAINER_NAME)-4
-
-rm:
-	docker rm `docker ps -a | grep $(IMAGE_NAME_BASE) | awk '{print $$1}'`
+run:
+	docker compose up -f ../docker-compose.yml
 
 stop:
-	docker kill `docker ps -a | grep $(IMAGE_NAME_BASE) | awk '{print $$1}'`
-	$(MAKE) rm
+	docker compose down -f ../docker-compose.yml
 
-tag:
-	docker tag $(SERVER_IMAGE_NAME) itstehkman/$(SERVER_IMAGE_NAME)
-	docker tag $(CLIENT_IMAGE_NAME) itstehkman/$(CLIENT_IMAGE_NAME)
+rm:
+	docker compose rm -f ../docker-compose.yml
 
-push:
-	$(MAKE) tag
-	docker push itstehkman/$(SERVER_IMAGE_NAME)
+# \
+tag: \
+	docker tag $(SERVER_IMAGE_NAME) itstehkman/$(SERVER_IMAGE_NAME) \
+	docker tag $(CLIENT_IMAGE_NAME) itstehkman/$(CLIENT_IMAGE_NAME) \
+\
+push: \
+	$(MAKE) tag \
+	docker push itstehkman/$(SERVER_IMAGE_NAME) \
 	docker push itstehkman/$(CLIENT_IMAGE_NAME)
