@@ -1,21 +1,15 @@
-# One of 2 Composite Docker images from the 3 seperate
-# This image will serve as the emulator, containing the emulator and a minimal xvnc setup
-FROM nginx:latest
+FROM analogwizard/docker-php-nginx:latest
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \ 
     apt-get install -y \
-        gcc \
-        git \
         bash \
-        make \
         ruby \
         xvfb \
         novnc \
         x11vnc \
         fluxbox \
         net-tools \
-        supervisor \
         mupen64plus-qt
 
 # configure mupen to relay audio and if possible make properly full screen
@@ -42,9 +36,18 @@ RUN x11vnc -storepasswd spectator ~/.vnc/passwd
 RUN rm -f /usr/share/novnc/vnc_lite.html
 COPY ./util/player.html ./util/spectator.html ./util/xmlhands.php /usr/share/novnc/
 
-COPY ./util/nginx.conf /etc/nginx/nginx.conf
+# Copy noVNC libraries and sites to the nginx host directory
+RUN cp -R /usr/share/novnc/* /var/www/html
 
 # "./main" because the context for the docker compose file is the directory above this one
 COPY ./main /app
+
+# Configure nginx - http
+# and over ride the base image
+COPY ./config/default-nginx.conf /etc/nginx/nginx.conf
+
 CMD ["/app/entrypoint.sh"]
 EXPOSE 8080
+
+# Separate websockify port to avoid confusion
+EXPOSE 8050

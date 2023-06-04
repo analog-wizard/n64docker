@@ -121,7 +121,9 @@
         // By default, use the host and port of server that served this file
         const host = readQueryVariable('host', window.location.hostname);
         let port = readQueryVariable('port', window.location.port);
-        const path = readQueryVariable('path', 'websockify');
+
+        // Following the example of 
+        const path = readQueryVariable('path', 'ws');
 
         // | | |         | | |
         // | | | Connect | | |
@@ -141,6 +143,7 @@
             url += ':' + port;
         }
         url += '/' + path;
+        console.log("final url : " + url)
 
         // Creating a new RFB object will start a new connection
         // Specifing the predefined password for the spectator account
