@@ -6,10 +6,10 @@ RUN apt-get update && \
         bash \
         ruby \
         xvfb \
-        novnc \
         x11vnc \
         fluxbox \
         net-tools \
+        websockify \
         mupen64plus-qt
 
 # configure mupen to relay audio and if possible make properly full screen
@@ -30,24 +30,20 @@ ENV HOME=/root \
 RUN mkdir ~/.vnc
 RUN x11vnc -storepasswd spectator ~/.vnc/passwd
 
-# inject extra webpage that assigns a player a virtual controller and for a "spectator" mode
-# "spectator" mode is just a modified vnc_lite.html that doesnt take inputs
-# and remove "vnc_lite.html" because it has been replaced with "spectator.html"
-RUN rm -f /usr/share/novnc/vnc_lite.html
-COPY ./util/player.html ./util/spectator.html ./util/xmlhands.php /usr/share/novnc/
-
 # Copy noVNC libraries and sites to the nginx host directory
-RUN cp -R /usr/share/novnc/* /var/www/html
+COPY noVNC-1.40-modified/ /var/www/html
+
+# Set ownership of the website file to "www-data", the user that runs the server
+RUN chown -R www-data /var/www/html
 
 # "./main" because the context for the docker compose file is the directory above this one
 COPY ./main /app
 
 # Configure nginx - http
-# and over ride the base image
-COPY ./config/default-nginx.conf /etc/nginx/nginx.conf
+COPY ./config/nginx.conf /etc/nginx/nginx.conf
+# Configure nginx - default server
+# and overwrite the base image config to allow for websocket proxying
+COPY ./config/default-nginx.conf /etc/nginx/conf.d/default.conf
 
 CMD ["/app/entrypoint.sh"]
 EXPOSE 8080
-
-# Separate websockify port to avoid confusion
-EXPOSE 8050
