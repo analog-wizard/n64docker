@@ -1,22 +1,15 @@
-# One of 2 Composite Docker images from the 3 seperate
-# This image will serve as the emulator, containing the emulator and a minimal xvnc setup
-FROM ubuntu:latest
+FROM analogwizard/docker-php-nginx:latest
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \ 
     apt-get install -y \
-        gcc \
-        git \
         bash \
-        make \
         ruby \
         xvfb \
-        nginx \
-        novnc \
         x11vnc \
         fluxbox \
         net-tools \
-        supervisor \
+        websockify \
         mupen64plus-qt
 
 # configure mupen to relay audio and if possible make properly full screen
@@ -37,15 +30,20 @@ ENV HOME=/root \
 RUN mkdir ~/.vnc
 RUN x11vnc -storepasswd spectator ~/.vnc/passwd
 
-# inject extra webpage that assigns a player a virtual controller and for a "spectator" mode
-# "spectator" mode is just a modified vnc_lite.html that doesnt take inputs
-# and remove "vnc_lite.html" because it has been replaced with "spectator.html"
-RUN rm -f /usr/share/novnc/vnc_lite.html
-COPY ./util/player.html ./util/spectator.html ./util/xmlhands.php /usr/share/novnc/
+# Copy noVNC libraries and sites to the nginx host directory
+COPY noVNC-1.40-modified/ /var/www/html
 
-COPY ./util/nginx.conf /etc/nginx/nginx.conf
+# Set ownership of the website file to "www-data", the user that runs the server
+RUN chown -R www-data /var/www/html
 
 # "./main" because the context for the docker compose file is the directory above this one
 COPY ./main /app
+
+# Configure nginx - http
+COPY ./config/nginx.conf /etc/nginx/nginx.conf
+# Configure nginx - default server
+# and overwrite the base image config to allow for websocket proxying
+COPY ./config/default-nginx.conf /etc/nginx/conf.d/default.conf
+
 CMD ["/app/entrypoint.sh"]
 EXPOSE 8080
