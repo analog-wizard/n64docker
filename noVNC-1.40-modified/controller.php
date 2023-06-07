@@ -1,3 +1,3 @@
 <?php 
 ?>
-<script src="./gamecontroller_js_master/dist/gamecontroller.min.js"></script>
+<script src="./gamecontroller_js_master/gamecontroller.min.js"></script>
