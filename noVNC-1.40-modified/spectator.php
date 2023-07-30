@@ -15,7 +15,7 @@
         Connect parameters are provided in query string:
             http://example.com/?host=HOST&port=PORT&scale=true
         -->
-        <title>noVNC</title>
+        <title>Spectator</title>
 
         <style>
 
@@ -66,7 +66,7 @@
             // When this function is called we have
             // successfully connected to a server
             function connectedToServer(e) {
-                status("Connected to " + desktopName);
+                status("Connected to " + desktopName + " as Spectator");
             }
 
             // This function is called when we are disconnected

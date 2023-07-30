@@ -45,5 +45,7 @@ COPY ./config/nginx.conf /etc/nginx/nginx.conf
 # and overwrite the base image config to allow for websocket proxying
 COPY ./config/default-nginx.conf /etc/nginx/conf.d/default.conf
 
+COPY ./config/mime.types /etc/nginx/mime.types
+
 CMD ["/app/entrypoint.sh"]
 EXPOSE 8080
