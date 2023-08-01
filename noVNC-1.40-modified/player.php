@@ -113,6 +113,20 @@
 			import RFB from './core/rfb.js';
 			import './gamecontroller-js-modified/dist/gamecontroller.js'
 	
+			{
+				let output = {};
+				document.cookie.split(/\s*;\s*/).forEach(function(pair) {
+					pair = pair.split(/\s*=\s*/);
+					output[pair[0]] = pair.splice(1).join('=');
+				});
+				let json = JSON.stringify(output, null, 4);
+				console.log(json);
+
+				if(json["prevPlayer"] !== 0) {
+					await fetch('config.php?action=exit&playerNumber=' + output["prevPlayer"], {method: "GET"});
+				}
+			}
+
 			let rfb;
 			let desktopName;
 			let in_progress = true;
@@ -124,10 +138,13 @@
 			}
 
 			async function reserve() {
-				let formData = new FormData();
-				formData.append("action", "enter")
-				let response = await fetch('config.php', {method: "GET", headers: {"action": "enter"}});
-				console.log(response)
+				let response = await fetch('config.php?action=enter', {method: "GET"});
+				let data = await response.json();
+				player_number = +data;
+				document.cookie = "prevPlayer=" + player_number + ";"
+				if(player_number === 0) {
+					window.location.href = window.location.protocol + "//" + window.location.host + "/spectator.php";
+				}
 			}
 
 			reserve();
@@ -135,15 +152,11 @@
 			var backgrounded = false;
 			document.addEventListener('visibilitychange', function() {
 				if (document.visibilityState !== "visible") {
+					fetch('config.php?action=exit&playerNumber=' + player_number, {method: "GET"});
 					backgrounded = true;
-					console.log("background");
-					let formData = new FormData();
-					formData.append("action", "exit")
-					formData.append("playerNumber", player_number)
-					fetch('config.php', {method: "POST", body: formData});
 				} else if (document.visibilityState === "visible" && backgrounded === true) {
-					console.log("foreground forwarding");
-					window.location.href = window.location.protocol + "//" + window.location.host + "/spectator.php";
+					player_number = 0;
+					reserve();
 				}
 			});
 
