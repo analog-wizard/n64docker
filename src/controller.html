@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Controller</title>
+		<style>
+			html {
+				touch-action: manipulation;
+			}
+
+			p, button {
+				max-width: 50ch;
+				font-family: Roboto, Arial, sans-serif;
+				font-size: 1.125rem;
+				line-height: 1.5em;
+			}
+
+			button {
+				color: white;
+				background: #369;
+				border: 0;
+				padding: 0.5rem 1rem;
+			}
+
+			button:hover {
+				background: #136;
+			}
+
+			#amdfc-controller {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				margin-right: -50%;
+				transform: translate(-50%, -50%);
+				height:77vh;
+				width: fit-content
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div id="joy3Div" style="width:200px;height:200px;margin:50px;position:fixed;bottom:30px;left:500px;"></div>
+			<script type="module" crossorigin="anonymous">
+				import "./gamecontroller-js-modified/src/index.js"
+				import virtualController from "./gamepad-simulator-modified/src/index.js"
+
+				//Handle previous session cookies
+				//I.E. player lock clean up
+				{
+					//Converts cookies to easy to use json object
+					let output = {};
+					document.cookie.split(/\s*;\s*/).forEach(function(pair) {
+						pair = pair.split(/\s*=\s*/);
+						output[pair[0]] = pair.splice(1).join('=');
+					});
+					let json = JSON.stringify(output, null, 4);
+
+					//If there was a previous player, request the lock be removed and await the result to avoid desync of
+					//player assignment
+					if(json["prevPlayer"] !== 0) {
+						await fetch('config.php?action=exit&playerNumber=' + output["prevPlayer"], {method: "GET"});
+					}
+				}
+
+				var player_number = 0;
+
+				async function reserve() {
+					let response = await fetch('config.php?action=enter', {method: "GET"});
+					let data = await response.json();
+					player_number = +data;
+					document.cookie = "prevPlayer=" + player_number + ";"
+					if(player_number === 0) {
+						window.location.href = window.location.protocol + "//" + window.location.host + "/spectator.html";
+					}
+					document.title = "Player #" + player_number + " Controller"
+				}
+
+				reserve();
+
+				var backgrounded = false;
+				document.addEventListener('visibilitychange', function() {
+					if (document.visibilityState !== "visible") {
+						fetch('config.php?action=exit&playerNumber=' + player_number, {method: "GET"});
+						backgrounded = true;
+					} else if (document.visibilityState === "visible" && backgrounded === true) {
+						player_number = 0;
+						reserve();
+					}
+				});
+
+				//works
+				gameControl.on('connect', function(gamepad) {
+					console.log("controller connected")
+				})
+
+				let controller = new virtualController("n64");
+				controller.create();
+				controller.connect();
+
+			</script>
+		</div>
+	</body>
+</html>

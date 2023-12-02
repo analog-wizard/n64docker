@@ -1,11 +1,10 @@
 version: '2'
 
-
 services:
   n64:
     build:
       context: .
-      dockerfile: main/Dockerfile
+      dockerfile: ./Dockerfile
     networks:
       - net
     ports:
